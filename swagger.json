@@ -1,44 +1,36 @@
 {
-    "openapi": "3.0.0",
-    "info": {
-      "title": "My API",
-      "description": "This is the Karaoke documentation 😎.",
-      "version": "1.0.0"
+  "openapi": "3.0.0",
+  "info": {
+    "title": "KaraVan API",
+    "description": "API for the KaraVan game, enabling room management, player interactions, and game sessions.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.karavan.com/v1",
+      "description": "Production Server"
     },
-    "servers": [
-      {
-        "url": "https://api.example.com/v1",
-        "description": "Production Server"
-      },
-      {
-        "url": "https://staging-api.example.com/v1",
-        "description": "Staging Server"
-      }
-    ],
-    "paths": {
-      "/users": {
-        "get": {
-          "summary": "Get all users",
-          "description": "Retrieves a list of users from the database.",
-          "responses": {
-            "200": {
-              "description": "A list of users",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "integer",
-                          "example": 1
-                        },
-                        "name": {
-                          "type": "string",
-                          "example": "John Doe"
-                        }
-                      }
+    {
+      "url": "http://localhost:5003",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/rooms": {
+      "post": {
+        "summary": "Create a room",
+        "description": "Creates a new game room and returns the room ID.",
+        "responses": {
+          "201": {
+            "description": "Room successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "roomId": {
+                      "type": "string",
+                      "example": "abc123"
                     }
                   }
                 }
@@ -46,123 +38,175 @@
             }
           }
         }
-      },
-      "/users/{id}": {
-        "get": {
-          "summary": "Get user by ID",
-          "parameters": [
-            {
-              "name": "id",
-              "in": "path",
-              "required": true,
-              "description": "ID of the user",
+      }
+    },
+    "/rooms/{roomId}/join": {
+      "post": {
+        "summary": "Join a room",
+        "description": "Allows a player to join an existing room.",
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the room to join",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
               "schema": {
-                "type": "integer"
+                "type": "object",
+                "properties": {
+                  "playerName": {
+                    "type": "string",
+                    "example": "Player1"
+                  }
+                }
               }
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "A single user",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "integer",
-                        "example": 1
-                      },
-                      "name": {
-                        "type": "string",
-                        "example": "John Doe"
-                      }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Player joined successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Player1 joined the room."
                     }
                   }
                 }
               }
-            },
-            "404": {
-              "description": "User not found"
+            }
+          },
+          "404": {
+            "description": "Room not found"
+          }
+        }
+      }
+    },
+    "/rooms/{roomId}/start": {
+      "post": {
+        "summary": "Start a game",
+        "description": "Starts the game in a specific room.",
+        "parameters": [
+          {
+            "name": "roomId",
+            "in": "path",
+            "required": true,
+            "description": "The unique ID of the room",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Game started successfully"
+          },
+          "400": {
+            "description": "Cannot start game (not enough players, etc.)"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "WebSocketRoomInfo": {
+        "type": "object",
+        "properties": {
+          "roomId": {
+            "type": "string",
+            "example": "abc123"
+          },
+          "status": {
+            "type": "string",
+            "example": "waiting"
+          },
+          "players": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "Player1"
             }
           }
         }
       }
     }
-    ,
-    "room": {
-      "/room": {
-        "post": {
-          "summary": "Create a new room",
-          "description": "Creates a new room.",
-          "responses": {
-            "200": {
-              "description": "The new room id.",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "json",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "integer",
-                          "example": 1
-                        },
-                        "name": {
-                          "type": "string",
-                          "example": "John Doe"
-                        }
-                      }
-                    }
-                  }
-                }
+  },
+  "websockets": {
+    "/ws/rooms/{roomId}/info": {
+      "summary": "Fetch room info via WebSocket",
+      "description": "Real-time updates on room status and players.",
+      "parameters": [
+        {
+          "name": "roomId",
+          "in": "path",
+          "required": true,
+          "description": "The unique ID of the room",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "message": {
+          "description": "Real-time room info",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebSocketRoomInfo"
               }
             }
           }
         }
-      },
-      "/users/{id}": {
-        "get": {
-          "summary": "Get user by ID",
-          "parameters": [
-            {
-              "name": "id",
-              "in": "path",
-              "required": true,
-              "description": "ID of the user",
+      }
+    },
+    "/ws/rooms/{roomId}/players": {
+      "summary": "Fetch player list via WebSocket",
+      "description": "Real-time updates on the list of players in the room.",
+      "parameters": [
+        {
+          "name": "roomId",
+          "in": "path",
+          "required": true,
+          "description": "The unique ID of the room",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "message": {
+          "description": "List of players",
+          "content": {
+            "application/json": {
               "schema": {
-                "type": "integer"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "A single user",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "integer",
-                        "example": 1
-                      },
-                      "name": {
-                        "type": "string",
-                        "example": "John Doe"
-                      }
+                "type": "object",
+                "properties": {
+                  "players": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "example": "Player1"
                     }
                   }
                 }
               }
-            },
-            "404": {
-              "description": "User not found"
             }
           }
         }
       }
     }
   }
-  
+}
