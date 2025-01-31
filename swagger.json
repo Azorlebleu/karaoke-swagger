@@ -2,7 +2,7 @@
     "openapi": "3.0.0",
     "info": {
       "title": "My API",
-      "description": "This is a sample API documentation using Swagger.",
+      "description": "This is the Karaoke documentation 😎.",
       "version": "1.0.0"
     },
     "servers": [
@@ -27,6 +27,81 @@
                 "application/json": {
                   "schema": {
                     "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "John Doe"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/users/{id}": {
+        "get": {
+          "summary": "Get user by ID",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "description": "ID of the user",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "A single user",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "example": 1
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "John Doe"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "User not found"
+            }
+          }
+        }
+      }
+    }
+    ,
+    "room": {
+      "/room": {
+        "post": {
+          "summary": "Create a new room",
+          "description": "Creates a new room.",
+          "responses": {
+            "200": {
+              "description": "The new room id.",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "json",
                     "items": {
                       "type": "object",
                       "properties": {
